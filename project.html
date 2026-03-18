@@ -1,54 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chhatrapati Shivaji Maharaj</title>
-    <style>
+  <meta charset="UTF-8">
+  <title>Country Guessing Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #1e272e;
+      color: white;
+    }
 
-        .container {
-            background-image: url('l.jpg');
-            h1{
-                color: hsl(0, 53%, 38%);
-            }
-             h2{
-                color: hsl(0, 53%, 38%);
-            }
-             p{
-                color: hsl(120, 78%, 36%);
-                font-size: 25px;
-            }
-        }
-        </style>
-    
+    header {
+      background: #485460;
+      padding: 15px;
+      text-align: center;
+    }
+
+    #map {
+      height: calc(100vh - 80px);
+    }
+
+    /* Special floating input box */
+    #panel {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      z-index: 1000;
+    }
+
+    input {
+      padding: 12px;
+      font-size: 18px;
+      width: 250px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      text-align: center;
+    }
+
+    button {
+      padding: 10px 18px;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: orange;
+      color: black;
+    }
+
+    #result {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+  </style>
 </head>
 <body>
-    
-    <div class="container">
-        <h1>Chhatrapati Shivaji Maharaj</h1>
-        
-        <h2>Early Life</h2>
-        <p>Shivaji Bhonsle was born on 19 February 1630 in the hill fort of Shivneri in the Maval region. He was the son of Shahaji Bhonsle, a military commander, and Jijabai, a woman of strong character and conviction. From his mother, Shivaji inherited courage and an unwavering commitment to his principles.</p>
-        
-        <h2>Rise to Power</h2>
-        <p>Shivaji gradually expanded his domain by capturing forts from the larger kingdoms surrounding him. By 1656, he had captured the valuable Torna Fort. His strategy of guerrilla warfare proved effective against the larger armies of the Adil Shahi and Mughal empires. He built an efficient administrative system and a powerful navy.</p>
-        
-        <h2>Conflicts with Aurangzeb</h2>
-        <p>As Shivaji's power grew, he came into conflict with the Mughal Emperor Aurangzeb. After the Battle of Talikota in 1565, tensions increased. Shivaji skillfully managed these conflicts through diplomacy and military strength, often negotiating favorable terms while maintaining his independence.</p>
-        
-        <h2>Legacy</h2>
-        <p>In 1674, Shivaji was formally crowned as the king of his own kingdom. He established the Marathi Empire and is remembered as a visionary ruler who defended India's independence against imperial powers. He pioneered modern guerrilla warfare tactics and built a strong naval force. Shivaji Maharaj died on 3 April 1680, but his legacy continues to inspire millions.</p>
-        
-        <h2>Impact</h2>
-        <p>Shivaji is celebrated as a national hero in India for his military genius, administrative acumen, and commitment to protecting his people. His life exemplifies courage, strategic thinking, and dedication to one's principles.</p>
-    
-         <h2>more about shivaji</h2>
-        <p>For more information about Chhatrapati Shivaji Maharaj, you can visit the following resources:</p>
-        <ul>
-            <li><a href="https://en.wikipedia.org/wiki/Shivaji">Wikipedia: Shivaji</a></li>
-            <li><a href="https://www.britannica.com/biography/Shivaji">Britannica: Shivaji</a></li>
-            <li><a href="https://www.history.com/topics/india/shivaji">History.com: Shivaji</a></li>
-        </ul>  
-    </div>
+
+<header>
+  <h1>🌍 Country Guessing Game</h1>
+</header>
+
+<div id="map"></div>
+
+<div id="panel">
+  <button onclick="startGame()">Start Game</button>
+  <br><br>
+
+  <form onsubmit="event.preventDefault(); checkAnswer();">
+    <input type="text" id="answer" placeholder="Type country name...">
+    <br>
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="result"></div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+  const map = L.map('map').setView([20, 0], 2);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  let geoLayer;
+  let currentCountry = "";
+
+  fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+    .then(res => res.json())
+    .then(data => {
+      geoLayer = L.geoJSON(data, {
+        style: {
+          color: '#fff',
+          weight: 1,
+          fillColor: '#576574',
+          fillOpacity: 0.5
+        }
+      }).addTo(map);
+
+      window.allCountries = geoLayer.getLayers();
+    });
+
+  function startGame() {
+    document.getElementById('result').textContent = '';
+    document.getElementById('answer').value = '';
+
+    geoLayer.eachLayer(layer => {
+      geoLayer.resetStyle(layer);
+    });
+
+    const randomLayer = allCountries[Math.floor(Math.random() * allCountries.length)];
+    currentCountry = randomLayer.feature.properties.name;
+
+    randomLayer.setStyle({ fillColor: 'orange', fillOpacity: 0.8 });
+
+    map.fitBounds(randomLayer.getBounds());
+  }
+
+  function checkAnswer() {
+    const userAnswer = document.getElementById('answer').value.trim().toLowerCase();
+    const correct = currentCountry.toLowerCase();
+
+    if (!currentCountry) return;
+
+    if (userAnswer === correct) {
+      document.getElementById('result').textContent = '✅ Correct! It is ' + currentCountry;
+    } else {
+      document.getElementById('result').textContent = '❌ Wrong! Correct answer: ' + currentCountry;
+    }
+  }
+</script>
+
 </body>
 </html>
